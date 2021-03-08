@@ -41,11 +41,11 @@ namespace WindowsConsoleStdoutHook
         private string ReadLine(IntPtr stdout)
         {
             if (stdout.ToInt32() == InvalidHandleValue)
-                throw new Win32Exception(); // Bled .. des soit ned passiern
+                throw new Win32Exception("Cannot get console handle");
 
 
             if (!GetConsoleScreenBufferInfo(stdout, out var outInfo))
-                throw new Win32Exception(); // Dann hod der target process ka console fenster.
+                throw new Win32Exception("Target process does not have console handle");
 
             var lineSize = outInfo.dwSize.X;
 

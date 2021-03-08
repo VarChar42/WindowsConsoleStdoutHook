@@ -6,7 +6,7 @@ namespace WindowsConsoleStdoutHook
     {
         private static void Main(string[] args)
         {
-            var hooker = new HandleHooker(18852);
+            var hooker = new HandleHooker(5612);
             hooker.PrepareProcess();
 
             while (true) Debug.Write(hooker.NextLine());
