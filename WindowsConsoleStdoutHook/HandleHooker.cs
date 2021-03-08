@@ -47,30 +47,28 @@ namespace WindowsConsoleStdoutHook
             if (!GetConsoleScreenBufferInfo(stdout, out var outInfo))
                 throw new Win32Exception(); // Dann hod der target process ka console fenster.
 
-
             var lineSize = outInfo.dwSize.X;
-
 
             var linesToRead = (uint) (outInfo.dwCursorPosition.Y - currentLinePos);
 
             if (linesToRead < 1) return null;
 
 
-            RemoteConsoleCursor dwReadRemoteConsoleCursor;
-            dwReadRemoteConsoleCursor.X = 0;
-            dwReadRemoteConsoleCursor.Y = currentLinePos;
+            RemoteConsoleCursor remoteCursor;
+            remoteCursor.X = 0;
+            remoteCursor.Y = currentLinePos;
 
             var nLength = (uint) lineSize * linesToRead + 2 * linesToRead;
 
-            var result = new StringBuilder((int) nLength);
-            var lpCharacter = new StringBuilder(lineSize);
+            var result = new StringBuilder((int) nLength); // Buffer whole output
+            var lineBuilder = new StringBuilder(lineSize); // Buffer current line
             for (var i = 0; i < linesToRead; i++)
             {
-                if (!ReadConsoleOutputCharacter(stdout, lpCharacter, (uint) lineSize, dwReadRemoteConsoleCursor,
+                if (!ReadConsoleOutputCharacter(stdout, lineBuilder, (uint) lineSize, remoteCursor,
                     out var lpNumberOfCharsRead))
                     throw new Win32Exception();
-                result.AppendLine(lpCharacter.ToString(0, (int) lpNumberOfCharsRead - 1));
-                dwReadRemoteConsoleCursor.Y++;
+                result.AppendLine(lineBuilder.ToString(0, (int) lpNumberOfCharsRead - 1));
+                remoteCursor.Y++;
             }
 
             currentLinePos = outInfo.dwCursorPosition.Y;
