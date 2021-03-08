@@ -84,7 +84,16 @@ namespace WindowsConsoleStdoutHook
 
         public string NextLine()
         {
-            return ReadLine(stdoutHandle);
+            PrepareProcess();
+
+            string line = null;
+
+            while (line == null)
+            {
+                line = ReadLine(stdoutHandle);
+            }
+
+            return line;
         }
 
 

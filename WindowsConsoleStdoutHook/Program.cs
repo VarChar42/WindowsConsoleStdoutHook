@@ -6,10 +6,15 @@ namespace WindowsConsoleStdoutHook
     {
         private static void Main(string[] args)
         {
-            var hooker = new HandleHooker(5612);
-            hooker.PrepareProcess();
+            var hooker = new HandleHooker(18836);
+            var hooker2 = new HandleHooker(22680);
 
-            while (true) Debug.Write(hooker.NextLine());
+
+            while (true)
+            {
+                Debug.WriteLine("[18836]: " + hooker.NextLine().Trim());
+                Debug.WriteLine("[22680]: " + hooker2.NextLine().Trim());
+            }
         }
     }
 }
