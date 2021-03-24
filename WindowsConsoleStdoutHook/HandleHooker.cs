@@ -7,11 +7,15 @@ namespace WindowsConsoleStdoutHook
 {
     internal class HandleHooker
     {
-        private const int StdOutputHandle = -11;
+        private const int STD_INPUT_HANDLE = -10;
+        private const int STD_OUTPUT_HANDLE = -11;
+        private const int STD_ERROR_HANDLE = -12;
         private const long InvalidHandleValue = -1;
         private readonly int pid;
         private short currentLinePos;
         private IntPtr stdoutHandle;
+        private IntPtr stderrHandle;
+        
 
         public HandleHooker(int pid)
         {
@@ -79,18 +83,27 @@ namespace WindowsConsoleStdoutHook
         {
             if (!FreeConsole() || !AttachConsole(pid)) return;
 
-            stdoutHandle = GetStdHandle(StdOutputHandle);
+            stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+            stderrHandle = GetStdHandle(STD_ERROR_HANDLE);
         }
 
-        public string NextLine()
+        public string NextOutLine()
         {
-            PrepareProcess();
+            return NextLine(stdoutHandle);
+        }
 
+        public string NextErrLine()
+        {
+            return NextLine(stderrHandle);
+        }
+
+        public string NextLine(IntPtr handle)
+        {
             string line = null;
 
             while (line == null)
             {
-                line = ReadLine(stdoutHandle);
+                line = ReadLine(handle);
             }
 
             return line;

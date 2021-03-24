@@ -12,8 +12,10 @@ namespace WindowsConsoleStdoutHook
 
             while (true)
             {
-                Debug.WriteLine("[18836]: " + hooker.NextLine().Trim());
-                Debug.WriteLine("[22680]: " + hooker2.NextLine().Trim());
+                hooker.PrepareProcess();
+                Debug.WriteLine("[18836]: " + hooker.NextOutLine().Trim());
+                hooker2.PrepareProcess();
+                Debug.WriteLine("[22680]: " + hooker2.NextErrLine().Trim());
             }
         }
     }
