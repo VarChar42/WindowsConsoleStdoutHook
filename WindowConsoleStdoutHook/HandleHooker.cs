@@ -29,6 +29,9 @@ namespace WindowConsoleStdoutHook
             out RemoteScreenBuffer lpRemoteScreenBuffer
         );
 
+        [DllImport("kernel32.dll")]
+        private static extern bool SetConsoleCtrlHandler(SetConsoleCtrlEventHandler handler, bool add);
+        
 
         private const int STD_INPUT_HANDLE = -10;
         private const int STD_OUTPUT_HANDLE = -11;
@@ -42,6 +45,8 @@ namespace WindowConsoleStdoutHook
 
         public event EventHandler<string> NewOutLine;
         public event EventHandler<string> NewErrLine;
+        public event EventHandler HookedConsoleClosing;
+        public event EventHandler<Exception> ReadException;
 
         public HandleHooker(int pid)
         {
@@ -54,15 +59,21 @@ namespace WindowConsoleStdoutHook
         }
 
         public void Start() {
-            while (true)
+            try
             {
-                string outLine = ReadLine(stdoutHandle);
-                string errLine = ReadLine(stderrHandle);
+                while (true)
+                {
+                    string outLine = ReadLine(stdoutHandle);
+                    string errLine = ReadLine(stderrHandle);
 
-                if (outLine != null) NewOutLine?.Invoke(this, outLine);
-                if (errLine != null) NewErrLine?.Invoke(this, errLine);
+                    if (outLine != null) NewOutLine?.Invoke(this, outLine);
+                    if (errLine != null) NewErrLine?.Invoke(this, errLine);
 
-                Thread.Sleep(500);
+                    Thread.Sleep(500);
+                }
+            }catch (Exception ex)
+            {
+                ReadException?.Invoke(this, ex);
             }
         }
 
@@ -110,6 +121,20 @@ namespace WindowConsoleStdoutHook
 
             stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
             stderrHandle = GetStdHandle(STD_ERROR_HANDLE);
+
+            SetConsoleCtrlHandler(CtrlHandler, true);
+        }
+
+        private bool CtrlHandler(CtrlType signal)
+        {
+            if(signal == CtrlType.CTRL_CLOSE_EVENT)
+            {
+                HookedConsoleClosing?.Invoke(this, EventArgs.Empty);
+                Environment.Exit(0);
+                return true;
+            }
+
+            return false;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -137,5 +162,16 @@ namespace WindowConsoleStdoutHook
             private readonly short Right;
             private readonly short Bottom;
         }
+
+        private enum CtrlType
+        {
+            CTRL_C_EVENT = 0,
+            CTRL_BREAK_EVENT = 1,
+            CTRL_CLOSE_EVENT = 2,
+            CTRL_LOGOFF_EVENT = 5,
+            CTRL_SHUTDOWN_EVENT = 6
+        }
+
+        private delegate bool SetConsoleCtrlEventHandler(CtrlType type);
     }
 }
